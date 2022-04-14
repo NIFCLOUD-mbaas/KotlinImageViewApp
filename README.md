@@ -14,11 +14,9 @@
 
 ## 動作環境
 
-* MacOS Big Sur 11.6 
-* Android Studio Arctic Fox 2020.3.1
-* Android OS ver. 6.0
-* Android SDK v3
-  - SDK v2系だと動作しないので注意
+* Android Studio Bumblebee | 2021.1.1 Patch 2
+* Android 8.0.0
+* NCMB Kotlin SDK 1.1.0
 
 ※上記内容で動作確認をしています。
 
@@ -53,10 +51,10 @@
 
 ### 3. SDKの導入（実装済み）
 
-※このサンプルアプリには既にSDKが実装済み（下記手順）となっています。（ver.3.0.0)<br>　最新版をご利用の場合は入れ替えてご利用ください。
+※このサンプルアプリには既にSDKが実装済み（下記手順）となっています。（ver.1.1.0)<br>　最新版をご利用の場合は入れ替えてご利用ください。
 
 * SDKダウンロード
-SDKはここ（[SDK リリースページ](https://github.com/NIFCloud-mbaas/ncmb_android/releases)）から取得してください.
+SDKはここ（[SDK リリースページ](https://github.com/NIFCLOUD-mbaas/ncmb_kotlin/releases)）から取得してください.
   - NCMB.jarファイルがダウンロードします。
 * SDKをインポート
   - app/libsフォルダにNCMB.jarをコピーします
@@ -64,8 +62,12 @@ SDKはここ（[SDK リリースページ](https://github.com/NIFCloud-mbaas/ncm
   - app/build.gradleファイルに以下を追加します
 ```gradle
 dependencies {
-    compile 'com.google.code.gson:gson:2.3.1'
-    compile files('libs/NCMB.jar')
+    implementation 'com.squareup.okhttp3:okhttp:4.8.1'
+    implementation 'com.google.code.gson:gson:2.3.1'
+    api files('libs/NCMB.jar')
+
+    //同期処理を使用する場合はこちらを追加していただく必要があります
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9'
 }
 ```
   - androidManifestの設定
@@ -131,7 +133,7 @@ dependencies {
 
 ### SDKのインポートと初期設定
 * ニフクラ mobile backend のドキュメント（クイックスタート）をご用意していますので、ご活用ください
- * [Androidのクイックスタート](https://mbaas.nifcloud.com/doc/current/introduction/quickstart_android.html#/Android/)
+ * [Androidのクイックスタート](https://mbaas.nifcloud.com/doc/current/introduction/quickstart_kotlin.html)
 
 ### ロジック
 * `activity_main.xml`でデザインを作成し、`MainActivity.kt`にロジックを書いています
@@ -139,7 +141,11 @@ dependencies {
 #### アップロードした画像ファイルのダウンロード
 ```kotlin
 //**************** APIキーの設定 **************
-NCMB.initialize(this, "YOUR_APPLICATION_KEY", "YOUR_CLIENT_KEY");
+NCMB.initialize(
+    this,
+    "YOUR_APPLICATION_KEY",
+    "YOUR_CLIENT_KEY"
+)
 
 setContentView(R.layout.activity_main)
 
@@ -148,19 +154,27 @@ _iv = findViewById<View>(R.id.imgShow) as ImageView
 _btnShow.setOnClickListener {
     // 画像ダウンロードする
     val file = NCMBFile("mBaaS_image.png")
-    file.fetchInBackground { dataFetch, er ->
-        if (er != null) {
-            //失敗処理
-            AlertDialog.Builder(this@MainActivity)
+    file.fetchInBackground(NCMBCallback { e, ncmbFile ->
+        runOnUiThread {
+            if (e != null) {
+                //失敗処理
+                AlertDialog.Builder(this)
                     .setTitle("Notification from NIFCloud")
-                    .setMessage("Error:" + er.message)
+                    .setMessage("Error:" + e.message)
                     .setPositiveButton("OK", null)
                     .show()
-        } else {
-            //成功処理
-            val bMap = BitmapFactory.decodeByteArray(dataFetch, 0, dataFetch.size)
-            _iv.setImageBitmap(bMap)
+            } else {
+                val fileObj = ncmbFile as NCMBFile
+                //成功処理
+                val bMap = BitmapFactory.decodeByteArray(
+                    fileObj.fileDownloadByte,
+                    0,
+                    fileObj.fileDownloadByte!!.size
+                )
+                _iv.setImageBitmap(bMap)
+            }
         }
-    }
+    })
+
 }
 ```

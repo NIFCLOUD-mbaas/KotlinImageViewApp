@@ -8,18 +8,23 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import com.nifcloud.mbaas.core.NCMB
+import com.nifcloud.mbaas.core.NCMBCallback
 import com.nifcloud.mbaas.core.NCMBFile
 
 
 class MainActivity : AppCompatActivity() {
-    lateinit var _btnShow: Button
-    lateinit var _iv: ImageView
+    private lateinit var _btnShow: Button
+    private lateinit var _iv: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         //**************** APIキーの設定 **************
-        NCMB.initialize(this, "YOUR_APPLICATION_KEY", "YOUR_CLIENT_KEY")
+        NCMB.initialize(
+            this,
+            "YOUR_APPLICATION_KEY",
+            "YOUR_CLIENT_KEY"
+        )
 
         setContentView(R.layout.activity_main)
 
@@ -28,27 +33,29 @@ class MainActivity : AppCompatActivity() {
         _btnShow.setOnClickListener {
             // 画像ダウンロードする
             val file = NCMBFile("mBaaS_image.png")
-            file.fetchInBackground { dataFetch, er ->
-                if (er != null) {
-                    //失敗処理
-                    AlertDialog.Builder(this@MainActivity)
+            file.fetchInBackground(NCMBCallback { e, ncmbFile ->
+                runOnUiThread {
+                    if (e != null) {
+                        //失敗処理
+                        AlertDialog.Builder(this)
                             .setTitle("Notification from NIFCloud")
-                            .setMessage("Error:" + er.message)
+                            .setMessage("Error:" + e.message)
                             .setPositiveButton("OK", null)
                             .show()
-                } else {
-                    //成功処理
-                    val bMap = BitmapFactory.decodeByteArray(dataFetch, 0, dataFetch.size)
-                    _iv.setImageBitmap(bMap)
+                    } else {
+                        val fileObj = ncmbFile as NCMBFile
+                        //成功処理
+                        val bMap = BitmapFactory.decodeByteArray(
+                            fileObj.fileDownloadByte,
+                            0,
+                            fileObj.fileDownloadByte!!.size
+                        )
+                        _iv.setImageBitmap(bMap)
+                    }
                 }
-            }
+            })
+
         }
 
-    }
-
-    companion object {
-
-        private val TAG = "MainActivity"
-        private val REQUEST_RESULT = 0
     }
 }
