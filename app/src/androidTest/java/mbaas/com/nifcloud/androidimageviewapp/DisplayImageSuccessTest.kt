@@ -39,7 +39,7 @@ class DisplayImageSuccessTest {
         onView(withText("ImageViewSample")).check(matches(isDisplayed()))
         onView(withId(R.id.imgShow)).check(matches(not(hasDrawable())))
         onView(withId(R.id.btnShow)).check(matches(isDisplayed())).perform(click())
-        onView(isRoot()).perform(waitFor(800))
+        onView(isRoot()).perform(waitFor(2000))
         onView(withId(R.id.imgShow)).check(matches(hasDrawable()))
     }
 }
