@@ -14,9 +14,10 @@
 
 ## 動作環境
 
-* Android Studio Bumblebee | 2021.1.1 Patch 2
-* Android 8.0.0
-* NCMB Kotlin SDK 1.1.0
+* MacOS Monterey version 12.5
+* Android Studio Chipmunk | 2021.2.1 Patch 2
+* Pixel 2 - Android 13 (Simulator)
+* KotlinSDK v1.2.0
 
 ※上記内容で動作確認をしています。
 
